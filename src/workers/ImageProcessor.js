@@ -6,6 +6,8 @@ const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
 const Redis = require("ioredis");
+require("dotenv").config();
+const WEBHOOK_URL = process.env.WEBHOOK_URL;   
 
 const connection = new Redis({
     host: "localhost",
@@ -17,11 +19,10 @@ const imageQueue = new Queue("imageQueue", {connection});
 
 
 
-const worker = new Worker("imageQueue", async (job) => {
+new Worker("imageQueue", async (job) => {
     // console.log(`Processing Job ID: ${job.id}, Data:`, job.data);
     const { requestId, productName, inputUrl } = job.data;
 
-    // console.log(path.basename(inputUrl));
     try 
     {
         if (!job.data.inputUrl) {
@@ -46,17 +47,22 @@ const worker = new Worker("imageQueue", async (job) => {
 
         const outputUrl = `http://localhost:3000/${outputPath}`;
 
-        await Image.findOneAndUpdate({ requestId, inputUrl }, { outputUrl, status: "processed" });
+        await Image.findOneAndUpdate({ requestId, productName, inputUrl }, { outputUrl, status: "processed" });
 
         const pendingImages = await Image.find({ requestId, status: "pending" }).countDocuments();
 
         if (pendingImages === 0) {
-            console.log("Request completed:", requestId);
             await Request.findOneAndUpdate({ requestId }, { status: "completed" });
+            
+            if (WEBHOOK_URL) {
+            
+                const response = await axios.post(WEBHOOK_URL, {
+                    requestId,
+                    status: "completed",
+                });
 
-        // if (WEBHOOK_URL) {
-        //     axios.post(WEBHOOK_URL, { requestId, status: "completed" });
-        // }
+                console.log(`✅ Webhook sent! Response: ${response.status}`);
+        }
         }
 
     } catch (error) {
@@ -65,13 +71,13 @@ const worker = new Worker("imageQueue", async (job) => {
         throw error;
     }
 
-},  {connection}
+},  {connection, concurrency: 10}
 );
 
 
-worker.on("failed", (job, err) => {
-    console.error(`❌ Worker Error - Job ID: ${job?.id}, Reason: ${err?.message}`);
-});
+// worker.on("failed", (job, err) => {
+//     console.error(`❌ Worker Error - Job ID: ${job?.id}, Reason: ${err?.message}`);
+// });
 
 
 module.exports = { imageQueue };
