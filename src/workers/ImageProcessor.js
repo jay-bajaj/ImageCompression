@@ -1,0 +1,77 @@
+const { Queue, Worker } = require("bullmq");
+const Image = require("../models/imageModel");
+const Request = require("../models/requestModel");
+const sharp = require('sharp');
+const axios = require("axios");
+const path = require("path");
+const fs = require("fs");
+const Redis = require("ioredis");
+
+const connection = new Redis({
+    host: "localhost",
+    port: 6379,
+    maxRetriesPerRequest: null
+});
+
+const imageQueue = new Queue("imageQueue", {connection});
+
+
+
+const worker = new Worker("imageQueue", async (job) => {
+    // console.log(`Processing Job ID: ${job.id}, Data:`, job.data);
+    const { requestId, productName, inputUrl } = job.data;
+
+    // console.log(path.basename(inputUrl));
+    try 
+    {
+        if (!job.data.inputUrl) {
+            throw new Error("ERROR: Missing inputUrl in job data!");
+        }
+        const response = await axios({
+            url: job.data.inputUrl,
+            responseType: "arraybuffer",
+            validateStatus: (status) => status >= 200 && status < 300 // Accept only valid responses
+        });
+        const downloadedImagePath = path.join(__dirname,"..", "..", "uploads","/inputImages", `downloaded_${job.id}.jpeg`);
+        fs.writeFileSync(downloadedImagePath, response.data);
+        
+        const metadata = await sharp(downloadedImagePath).metadata();
+
+        if (!["jpeg", "png", "webp"].includes(metadata.format)) {
+            throw new Error(`Unsupported image format: ${metadata.format}`);
+        }
+        const outputPath = path.join(__dirname, "..", "..", "uploads","compressed", `compressed_${path.basename(job.id)}.jpeg`);
+
+        await sharp(downloadedImagePath).jpeg({ quality: 50 }).toFile(outputPath); // reduce image quality by 50%
+
+        const outputUrl = `http://localhost:3000/${outputPath}`;
+
+        await Image.findOneAndUpdate({ requestId, inputUrl }, { outputUrl, status: "processed" });
+
+        const pendingImages = await Image.find({ requestId, status: "pending" }).countDocuments();
+
+        if (pendingImages === 0) {
+            console.log("Request completed:", requestId);
+            await Request.findOneAndUpdate({ requestId }, { status: "completed" });
+
+        // if (WEBHOOK_URL) {
+        //     axios.post(WEBHOOK_URL, { requestId, status: "completed" });
+        // }
+        }
+
+    } catch (error) {
+        console.log("Error fetching image:", error);
+
+        throw error;
+    }
+
+},  {connection}
+);
+
+
+worker.on("failed", (job, err) => {
+    console.error(`❌ Worker Error - Job ID: ${job?.id}, Reason: ${err?.message}`);
+});
+
+
+module.exports = { imageQueue };
