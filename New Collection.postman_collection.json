@@ -1,0 +1,62 @@
+{
+	"info": {
+		"_postman_id": "cfadeb5b-d5fc-4458-99d2-048c68b2b355",
+		"name": "New Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14222751"
+	},
+	"item": [
+		{
+			"name": "http://localhost:3000/upload",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/upload",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:3000/status/19af807d-f7b0-4679-81cf-4e03adb36137",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/status/19af807d-f7b0-4679-81cf-4e03adb36137",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"status",
+						"19af807d-f7b0-4679-81cf-4e03adb36137"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

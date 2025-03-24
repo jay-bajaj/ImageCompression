@@ -9,6 +9,8 @@ const { imageQueue } = require("../workers/imageProcessor");
 const router = express.Router();
 
 
+
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         return cb(null, './uploads')
@@ -42,6 +44,7 @@ router.post("/", upload.single("file"), async (req,res)=>{
             for (const inputUrl of inputUrls) {
                 await Image.create({
                     requestId,
+                    serialNumber: row["Serial Number"],
                     productName: row["Name"],
                     inputUrl,
                 });
