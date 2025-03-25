@@ -22,7 +22,7 @@ async function validateCSV(filePath) {
         let headersValidated = false;
         let headersError = null;
 
-        fs.createReadStream(filePath)
+        filePath
             .pipe(csvParser())
             .on("headers", (headers) => {
                 const missingHeaders = REQUIRED_HEADERS.filter(h => !headers.includes(h));
