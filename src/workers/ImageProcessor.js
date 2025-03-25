@@ -9,9 +9,10 @@ const sendWebhookNotification = require("../webhookNotifier");
 const getInputFilePath = require("../utils/getInputImage");
 require("dotenv").config();
 
-const connection = new Redis({
-    host: "localhost",
-    port: 6379,
+const redisURL = process.env.REDIS_URL || "redis://127.0.0.1:6379";
+
+const connection = new Redis(redisURL, {
+    tls: redisURL.startsWith("rediss://") ? {} : undefined, 
     maxRetriesPerRequest: null
 });
 
