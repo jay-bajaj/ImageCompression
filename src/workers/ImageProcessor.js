@@ -7,9 +7,8 @@ const path = require("path");
 const fs = require("fs");
 const Redis = require("ioredis");
 const generateCSV = require("../utils/generateCSV");
+const sendWebhookNotification = require("../webhookNotifier");
 require("dotenv").config();
-
-const WEBHOOK_URL = process.env.WEBHOOK_URL;   
 
 const connection = new Redis({
     host: "localhost",
@@ -74,17 +73,9 @@ const worker = new Worker("imageQueue", async (job) => {
 
         if (pendingImages === 0) {
             await Request.findOneAndUpdate({ requestId }, { status: "completed" });
+
             await generateCSV(requestId);
-
-            if (WEBHOOK_URL) {
-            
-                const response = await axios.post(WEBHOOK_URL, {
-                    requestId,
-                    status: "completed",
-                });
-
-                console.log(`✅ Webhook sent! Response: ${response.status}`);
-        }
+            await sendWebhookNotification(requestId, "completed"); // Trigger Webhook Notification
         }
 
     } catch (error) {
