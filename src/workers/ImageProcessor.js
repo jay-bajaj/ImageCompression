@@ -68,7 +68,7 @@ async function generateCSV(requestId) {
 
 new Worker("imageQueue", async (job) => {
     // console.log(`Processing Job ID: ${job.id}, Data:`, job.data);
-    const { requestId, productName, inputUrl } = job.data;
+    const { requestId, serialNumber, productName, inputUrl } = job.data;
 
     try 
     {
@@ -76,18 +76,37 @@ new Worker("imageQueue", async (job) => {
             throw new Error("ERROR: Missing inputUrl in job data!");
         }
         try{
-            const response = await axios({
-                url: job.data.inputUrl,
-                responseType: "arraybuffer",
-                validateStatus: (status) => status >= 200 && status < 300 // Accept only valid responses
-            });
+
+            let inputFilePath;
+        
+            if (inputUrl.startsWith("http")) {
+                // ✅ Remote Image: Download it
+                console.log(`Downloading image from: ${inputUrl}`);
+
+                const response = await axios({
+                    url: job.data.inputUrl,
+                    responseType: "arraybuffer",
+                    validateStatus: (status) => status >= 200 && status < 300
+                });
+
+                const inputImagesDir = path.join(__dirname, "..", "..", "uploads", "inputImages");
+                if (!fs.existsSync(inputImagesDir)) fs.mkdirSync(inputImagesDir, { recursive: true });
+
+                inputFilePath = path.join(inputImagesDir, `downloaded_${path.basename(job.id)}.jpeg`);
+                fs.writeFileSync(inputFilePath, response.data);
+            } else {
+                // ✅ Local Image: Use the existing file path
+                console.log(`Using local image: ${inputUrl}`);
+                inputFilePath = path.resolve(inputUrl);
+
+                if (!fs.existsSync(inputFilePath)) {
+                    throw new Error(`Local file not found: ${inputFilePath}`);
+                }
+            }
             
-            const downloadedImagePath = path.join(__dirname,"..", "..", "uploads","inputImages", `downloaded_${job.id}.jpeg`);
-            console.log(`Image fetched successfully!`);
-            fs.writeFileSync(downloadedImagePath, response.data);
             const outputPath = path.join(__dirname, "..", "..", "uploads","compressed", `compressed_${path.basename(job.id)}.jpeg`);
     
-            await sharp(downloadedImagePath).jpeg({ quality: 50 }).toFile(outputPath); // reduce image quality by 50%
+            await sharp(inputFilePath).jpeg({ quality: 50 }).toFile(outputPath); // reduce image quality by 50%
             const outputUrl = `http://localhost:3000/${outputPath}`;
     
             await Image.findOneAndUpdate({ requestId, productName, inputUrl }, { outputUrl, status: "processed" });
