@@ -6,7 +6,7 @@ const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
 const Redis = require("ioredis");
-const { Parser } = require("json2csv");
+const generateCSV = require("../utils/generateCSV");
 require("dotenv").config();
 
 const WEBHOOK_URL = process.env.WEBHOOK_URL;   
@@ -18,52 +18,6 @@ const connection = new Redis({
 });
 
 const imageQueue = new Queue("imageQueue", {connection});
-
-
-async function generateCSV(requestId) {
-    const images = await Image.find({ requestId });
-
-    if (!images.length) {
-        console.log(`No processed images found for requestId: ${requestId}`);
-        return;
-    }
-
-    const csvFilePath = path.join(__dirname, "..", "..", "uploads", "output", `output_${requestId}.csv`);
-
-    const csvFields = ["Serial Number", "Product Name", "Input URLs", "Output URLs"];
-    const csvParser = new Parser({ fields: csvFields });
-
-    // 🔹 Group images by Serial Number
-    const groupedData = {};
-    
-    images.forEach(image => {
-        if (!groupedData[image.serialNumber]) {
-            groupedData[image.serialNumber] = {
-                "Serial Number": image.serialNumber,
-                "Product Name": image.productName,
-                "Input URLs": [],
-                "Output URLs": []
-            };
-        }
-        
-        groupedData[image.serialNumber]["Input URLs"].push(image.inputUrl);
-        groupedData[image.serialNumber]["Output URLs"].push(image.outputUrl || "Processing Failed");
-    });
-
-    // 🔹 Convert grouped data into an array for CSV
-    const csvData = Object.values(groupedData).map(entry => ({
-        "Serial Number": entry["Serial Number"],
-        "Product Name": entry["Product Name"],
-        "Input URLs": entry["Input URLs"].join(", "),  // Convert array to string
-        "Output URLs": entry["Output URLs"].join(", ") // Convert array to string
-    }));
-
-    const csvContent = csvParser.parse(csvData);
-    
-    fs.writeFileSync(csvFilePath, csvContent);
-
-    console.log(`✅ Output CSV generated: ${csvFilePath}`);
-}
 
 
 const worker = new Worker("imageQueue", async (job) => {
