@@ -66,7 +66,7 @@ async function generateCSV(requestId) {
 }
 
 
-new Worker("imageQueue", async (job) => {
+const worker = new Worker("imageQueue", async (job) => {
     // console.log(`Processing Job ID: ${job.id}, Data:`, job.data);
     const { requestId, serialNumber, productName, inputUrl } = job.data;
 
@@ -80,7 +80,7 @@ new Worker("imageQueue", async (job) => {
             let inputFilePath;
         
             if (inputUrl.startsWith("http")) {
-                // ✅ Remote Image: Download it
+                // Remote Image: Download it
                 console.log(`Downloading image from: ${inputUrl}`);
 
                 const response = await axios({
@@ -95,7 +95,7 @@ new Worker("imageQueue", async (job) => {
                 inputFilePath = path.join(inputImagesDir, `downloaded_${path.basename(job.id)}.jpeg`);
                 fs.writeFileSync(inputFilePath, response.data);
             } else {
-                // ✅ Local Image: Use the existing file path
+                // Local Image: Use the existing file path
                 console.log(`Using local image: ${inputUrl}`);
                 inputFilePath = path.resolve(inputUrl);
 
@@ -143,9 +143,9 @@ new Worker("imageQueue", async (job) => {
 );
 
 
-// worker.on("failed", (job, err) => {
-//     console.error(`❌ Worker Error - Job ID: ${job?.id}, Reason: ${err?.message}`);
-// });
+worker.on("failed", (job, err) => {
+    console.error(`❌ Worker Error - Job ID: ${job?.id}, Reason: ${err?.message}`);
+});
 
 
 module.exports = { imageQueue };
