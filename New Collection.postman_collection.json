@@ -36,7 +36,7 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:3000/upload Copy",
+			"name": "local post request",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -99,7 +99,30 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:3000/status/19af807d-f7b0-4679-81cf-4e03adb36137",
+			"name": "Get status locally",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/status/431e3ff7-3450-4419-9510-9da691e174a4",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"status",
+						"431e3ff7-3450-4419-9510-9da691e174a4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Status on Cloud",
 			"request": {
 				"auth": {
 					"type": "noauth"
