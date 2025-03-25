@@ -43,7 +43,7 @@ const worker = new Worker("imageQueue", async (job) => {
             
             const outputPath = path.join(__dirname, "..", "..", "uploads","compressed", `compressed_${path.basename(job.id)}.jpeg`);
     
-            await sharp(inputFilePath).jpeg({ quality: 50 }).toFile(outputPath); // reduce image quality by 50%
+            await sharp(inputFilePath).jpeg({ quality: 50 }).toFile(outputPath); // reduce image quality by 50% and store in database
             const outputUrl = `http://localhost:3000/${outputPath}`;
     
             await Image.findOneAndUpdate({ requestId, productName, inputUrl }, { outputUrl, status: "processed" });

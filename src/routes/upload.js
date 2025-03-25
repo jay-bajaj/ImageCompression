@@ -1,8 +1,6 @@
 const express = require("express");
 const multer = require("multer");
 const { v4: uuidv4 } = require('uuid');
-const fs = require("fs");
-const csvParser = require("csv-parser");
 const Request = require("../models/requestModel");
 const Image = require("../models/imageModel");
 const { imageQueue } = require("../workers/imageProcessor");
