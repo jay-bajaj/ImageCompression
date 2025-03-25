@@ -3,7 +3,7 @@ const multer = require("multer");
 const { v4: uuidv4 } = require('uuid');
 const Request = require("../models/requestModel");
 const Image = require("../models/imageModel");
-const { imageQueue } = require("../workers/imageProcessor");
+const { imageQueue } = require("../workers/ImageProcessor");
 const {validateCSV} = require("../utils/csvValidator");
 const router = express.Router();
 
