@@ -31,7 +31,7 @@ const worker = new Worker("imageQueue", async (job) => {
         try{
 
             if (!inputUrl) {
-                throw new Error("RROR: Missing inputUrl in job data!");
+                throw new Error("ERROR: Missing inputUrl in job data!");
             }
     
             let inputFilePath;

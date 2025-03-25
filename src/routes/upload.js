@@ -26,7 +26,6 @@ const upload = multer({ storage });
 router.post("/", upload.single("file"), async (req, res) => {
     let csvStream;
     let filename = null;
-    console.log(req.body);
     try {
         if (req.file) {
             // Handle Local CSV File Upload

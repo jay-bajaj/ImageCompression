@@ -8,7 +8,7 @@ async function getInputFilePath(inputUrl, jobId) {
     if (inputUrl.startsWith("http")) {
         //Remote Image: Download it
         try {
-            console.log(`🌍 Downloading image from: ${inputUrl}`);
+            console.log(`Downloading image from: ${inputUrl}`);
 
             const response = await axios({
                 url: inputUrl,
