@@ -2,12 +2,11 @@ const { Queue, Worker } = require("bullmq");
 const Image = require("../models/imageModel");
 const Request = require("../models/requestModel");
 const sharp = require('sharp');
-const axios = require("axios");
 const path = require("path");
-const fs = require("fs");
 const Redis = require("ioredis");
 const generateCSV = require("../utils/generateCSV");
 const sendWebhookNotification = require("../webhookNotifier");
+const getInputFilePath = require("../utils/getInputImage");
 require("dotenv").config();
 
 const connection = new Redis({
@@ -30,31 +29,16 @@ const worker = new Worker("imageQueue", async (job) => {
         }
         try{
 
+            if (!inputUrl) {
+                throw new Error("RROR: Missing inputUrl in job data!");
+            }
+    
             let inputFilePath;
-        
-            if (inputUrl.startsWith("http")) {
-                // Remote Image: Download it
-                console.log(`Downloading image from: ${inputUrl}`);
-
-                const response = await axios({
-                    url: job.data.inputUrl,
-                    responseType: "arraybuffer",
-                    validateStatus: (status) => status >= 200 && status < 300
-                });
-
-                const inputImagesDir = path.join(__dirname, "..", "..", "uploads", "inputImages");
-                if (!fs.existsSync(inputImagesDir)) fs.mkdirSync(inputImagesDir, { recursive: true });
-
-                inputFilePath = path.join(inputImagesDir, `downloaded_${path.basename(job.id)}.jpeg`);
-                fs.writeFileSync(inputFilePath, response.data);
-            } else {
-                // Local Image: Use the existing file path
-                console.log(`Using local image: ${inputUrl}`);
-                inputFilePath = path.resolve(inputUrl);
-
-                if (!fs.existsSync(inputFilePath)) {
-                    throw new Error(`Local file not found: ${inputFilePath}`);
-                }
+            try {
+                inputFilePath = await getInputFilePath(inputUrl, job.id);
+            } catch (error) {
+                console.error(`Skipping Job ID ${job.id}: ${error.message}`);
+                return;
             }
             
             const outputPath = path.join(__dirname, "..", "..", "uploads","compressed", `compressed_${path.basename(job.id)}.jpeg`);
@@ -89,7 +73,7 @@ const worker = new Worker("imageQueue", async (job) => {
 
 
 worker.on("failed", (job, err) => {
-    console.error(`❌ Worker Error - Job ID: ${job?.id}, Reason: ${err?.message}`);
+    console.error(`Worker Error - Job ID: ${job?.id}, Reason: ${err?.message}`);
 });
 
 
