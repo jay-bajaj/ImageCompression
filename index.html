@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing System</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input, button { margin: 10px; padding: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Upload CSV for Image Processing</h2>
+
+    <!-- Local CSV Upload -->
+    <form id="uploadForm">
+        <input type="file" id="csvFile" accept=".csv" required>
+        <button type="submit">Upload CSV</button>
+    </form>
+
+    <h3>OR</h3>
+
+    <!-- GitHub CSV URL Upload -->
+    <input type="text" id="csvUrl" placeholder="Enter GitHub CSV URL">
+    <button onclick="uploadCSV()">Submit CSV URL</button>
+
+    <h2>Check Status</h2>
+    <input type="text" id="requestId" placeholder="Enter Request ID">
+    <button onclick="checkStatus()">Check Status</button>
+
+    <h2>Download Processed CSV</h2>
+    <button onclick="downloadCSV()">Download</button>
+
+    <p id="response"></p>
+
+    <script>
+        const API_URL = "https://your-app.onrender.com"; // Replace with your Render API URL
+
+        // Local CSV Upload
+        document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const file = document.getElementById("csvFile").files[0];
+            if (!file) return alert("Please select a file!");
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch(`${API_URL}/upload`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            document.getElementById("response").innerText = JSON.stringify(data, null, 2);
+        });
+
+        // GitHub CSV URL Upload
+        async function uploadCSV() {
+            const csvUrl = document.getElementById("csvUrl").value;
+            if (!csvUrl) return alert("Please enter a valid GitHub CSV URL!");
+
+            const response = await fetch(`${API_URL}/upload`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ csvUrl })
+            });
+
+            const data = await response.json();
+            document.getElementById("response").innerText = JSON.stringify(data, null, 2);
+        }
+
+        // Check Status
+        async function checkStatus() {
+            const requestId = document.getElementById("requestId").value;
+            if (!requestId) return alert("Enter a valid Request ID!");
+
+            const response = await fetch(`${API_URL}/status/${requestId}`);
+            const data = await response.json();
+            document.getElementById("response").innerText = JSON.stringify(data, null, 2);
+        }
+
+        // Download Processed CSV
+        function downloadCSV() {
+            const requestId = document.getElementById("requestId").value;
+            if (!requestId) return alert("Enter a valid Request ID!");
+
+            window.location.href = `${API_URL}/download/${requestId}`;
+        }
+    </script>
+
+</body>
+</html>
