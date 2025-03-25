@@ -7,19 +7,82 @@
 	},
 	"item": [
 		{
-			"name": "http://localhost:3000/upload",
+			"name": "post request in cloud",
 			"request": {
 				"method": "POST",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"csvUrl\": \"https://raw.githubusercontent.com/jay-bajaj/ImageCompression/refs/heads/master/sample_data.csv\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://imagecompression-qwac.onrender.com/upload",
+					"protocol": "https",
+					"host": [
+						"imagecompression-qwac",
+						"onrender",
+						"com"
+					],
+					"path": [
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:3000/upload Copy",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "formdata",
 					"formdata": [
 						{
 							"key": "file",
 							"type": "file",
-							"src": []
+							"src": "/D:/Development/ImageCompression/sample_data.csv"
 						}
 					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/upload",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload a file from github",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"csvUrl\": \"https://raw.githubusercontent.com/jay-bajaj/ImageCompression/refs/heads/master/sample_data.csv\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
 				},
 				"url": {
 					"raw": "http://localhost:3000/upload",
